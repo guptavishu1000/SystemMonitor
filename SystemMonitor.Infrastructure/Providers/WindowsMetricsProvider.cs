@@ -12,8 +12,12 @@ public sealed class WindowsMetricsProvider : ISystemMetricsProvider
     public WindowsMetricsProvider()
     {
         // Use PerformanceCounter for Windows CPU total
+//#if WINDOWS
         _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
         _cpuCounter.NextValue(); // prime
+//#else
+//        throw new PlatformNotSupportedException("WindowsMetricsProvider is only supported on Windows.");
+//#endif
     }
 
     public MonitoringData GetMetrics()
