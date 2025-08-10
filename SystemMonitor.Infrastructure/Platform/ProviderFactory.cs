@@ -1,34 +1,27 @@
-﻿namespace SystemMonitor.Infrastructure.Platform;
+﻿using SystemMonitor.Core.Interfaces;
+using SystemMonitor.Infrastructure.Providers;
 
-using SystemMonitor.Core.Interfaces;
+namespace SystemMonitor.Infrastructure.Platform;
 
-/// <summary>
-/// Factory that selects an ISystemMetricsProvider implementation using the Strategy pattern.
-/// The selection can be based on RuntimeInformation, configuration, environment, or explicit override.
-/// New providers can be registered here or via DI registration extension methods.
-/// </summary>
 public static class ProviderFactory
 {
-    public static ISystemMetricsProvider CreateProvider(string? preferredProvider = null)
+    public static ISystemMetricsProvider CreateProvider(string? name = null)
     {
-        // NOTE: This is intentionally simple. For real apps, use DI to register multiple providers
-        // and select them by name (IOptions pattern) or implement a registry to resolve by key.
-
-        if (!string.IsNullOrEmpty(preferredProvider))
+        if (!string.IsNullOrWhiteSpace(name))
         {
-            // Choose by configured name ("windows", "linux", ...)
-            return preferredProvider.ToLowerInvariant() switch
+            return name.ToLowerInvariant() switch
             {
-                "windows" => new Providers.WindowsMetricsProvider(),
-                "linux" => new Providers.LinuxMetricsProvider(),
-                _ => throw new ArgumentException("Unknown provider name", nameof(preferredProvider))
+                "windows" => new WindowsMetricsProvider(),
+                "linux" => new LinuxMetricsProvider(),
+                "macos" or "darwin" or "osx" => new MacMetricsProvider(),
+                _ => throw new ArgumentException("Unknown provider name")
             };
         }
 
-        // Fallback: pick based on runtime OS
-        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
-            return new Providers.WindowsMetricsProvider();
+        if (OperatingSystem.IsWindows()) return new WindowsMetricsProvider();
+        if (OperatingSystem.IsLinux()) return new LinuxMetricsProvider();
+        if (OperatingSystem.IsMacOS()) return new MacMetricsProvider();
 
-        return new Providers.LinuxMetricsProvider();
+        throw new PlatformNotSupportedException("Unsupported OS");
     }
 }

@@ -1,25 +1,31 @@
-﻿namespace SystemMonitor.Infrastructure.Plugins;
-
-using SystemMonitor.Core.Interfaces;
+﻿using SystemMonitor.Core.Interfaces;
 using SystemMonitor.Core.Models;
 
-/// <summary>
-/// Simple plugin that logs human-readable lines to a rolling file.
-/// </summary>
+namespace SystemMonitor.Infrastructure.Plugins;
+
 public class FileLoggerPlugin : IMonitorPlugin
 {
-    private readonly string _path;
+    private readonly string _filePath;
+    private readonly SemaphoreSlim _sema = new(1, 1);
 
-    public FileLoggerPlugin(string path)
+    public FileLoggerPlugin(string filePath)
     {
-        _path = path;
+        _filePath = filePath ?? "monitor.log";
     }
 
-    public Task OnMetricsAsync(MonitoringData data, CancellationToken ct = default)
+    public async Task OnMetricsAsync(MonitoringData data, CancellationToken ct = default)
     {
-        // Minimal example: append to file. In production, use a proper async logger and rotation.
-        var line = $"{data.Timestamp:o} | CPU:{data.CpuPercent:F1}% | RAM:{data.RamUsedMb:F0}/{data.RamTotalMb:F0} MB | DISK:{data.DiskUsedMb:F0}/{data.DiskTotalMb:F0} MB";
-        File.AppendAllText(_path, line + Environment.NewLine);
-        return Task.CompletedTask;
+        var line = $"{data.Timestamp:O} | CPU:{data.CpuPercent:F1}% | RAM:{data.RamUsedMb:F0}/{data.RamTotalMb:F0} MB | DISK:{data.DiskUsedMb:F0}/{data.DiskTotalMb:F0} MB";
+        try
+        {
+            await _sema.WaitAsync(ct).ConfigureAwait(false);
+            await File.AppendAllTextAsync(_filePath, line + Environment.NewLine, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"FileLoggerPlugin error: {ex.Message}");
+        }
+        finally { _sema.Release(); }
     }
 }
