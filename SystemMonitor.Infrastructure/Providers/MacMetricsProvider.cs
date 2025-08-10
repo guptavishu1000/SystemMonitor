@@ -10,7 +10,11 @@ public sealed class MacMetricsProvider : ISystemMetricsProvider
 
     public MacMetricsProvider()
     {
-        _lastCpu = ReadCpu();
+//#if OSX
+//        _lastCpu = ReadCpu();
+//#else
+        throw new PlatformNotSupportedException("MacMetricsProvider is only supported on macOS.");
+//#endif
     }
 
     public MonitoringData GetMetrics()

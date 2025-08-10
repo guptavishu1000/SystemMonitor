@@ -9,7 +9,11 @@ public sealed class LinuxMetricsProvider : ISystemMetricsProvider
 
     public LinuxMetricsProvider()
     {
-        _lastSample = ReadCpuSample();
+//#if LINUX
+//        _lastSample = ReadCpuSample();
+//#else
+        throw new PlatformNotSupportedException("LinuxMetricsProvider can only be used on Linux systems");
+//#endif
     }
 
     public MonitoringData GetMetrics()
