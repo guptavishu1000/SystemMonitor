@@ -1,22 +1,10 @@
-﻿namespace SystemMonitor.App;
-
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using SystemMonitor.Core.Services;
 
-/// <summary>
-/// Small adapter that connects IMonitoringService to the Generic Host lifetime via IHostedService.
-/// Keeps MonitoringService testable while allowing simple host integration.
-/// </summary>
-public class HostedMonitorWrapper : IHostedService
+public class HostedWrapper : IHostedService
 {
-    private readonly IMonitoringService _monitoringService;
-
-    public HostedMonitorWrapper(IMonitoringService monitoringService)
-    {
-        _monitoringService = monitoringService;
-    }
-
-    public Task StartAsync(CancellationToken cancellationToken) => _monitoringService.StartAsync(cancellationToken);
-
-    public Task StopAsync(CancellationToken cancellationToken) => _monitoringService.StopAsync(cancellationToken);
+    private readonly IMonitoringService _svc;
+    public HostedWrapper(IMonitoringService svc) => _svc = svc;
+    public Task StartAsync(CancellationToken cancellationToken) => _svc.StartAsync(cancellationToken);
+    public Task StopAsync(CancellationToken cancellationToken) => _svc.StopAsync(cancellationToken);
 }

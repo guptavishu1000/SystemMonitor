@@ -15,6 +15,9 @@ public class ApiPostPlugin : IMonitorPlugin
 
     public ApiPostPlugin(HttpClient httpClient, string endpoint)
     {
+        if (string.IsNullOrWhiteSpace(endpoint))
+            throw new ArgumentException("API endpoint must be provided", nameof(endpoint));
+
         _httpClient = httpClient;
         _endpoint = endpoint;
     }
