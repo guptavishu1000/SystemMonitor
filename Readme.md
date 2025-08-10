@@ -79,3 +79,6 @@ You’ll see something like:
 ```
 Now listening on: http://localhost:5000
 ```
+
+## Possible Error(s):
+1. Regarding appsettings.json, if you encounter an error related to problem copying json, make sure the file is set to "Copy if newer" in the project properties.
